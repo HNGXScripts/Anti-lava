@@ -1,0 +1,566 @@
+-- Premium Anti-Lava GUI - zYn • Enhanced Luxury Edition
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+-- Variables
+local antiLavaActive = false
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local protectionCount = 0
+
+-- Animation settings
+local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+-- Initialize on respawn
+local function initCharacter(char)
+    Character = char
+    Humanoid = Character:WaitForChild("Humanoid")
+    HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+    protectionCount = 0
+end
+LocalPlayer.CharacterAdded:Connect(initCharacter)
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AntiLavaGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Helper functions for luxury styling
+local function addLuxuryCorner(frame, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius or 18)
+    corner.Parent = frame
+end
+
+local function addLuxuryGradient(frame, colors, rotation)
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = colors
+    gradient.Rotation = rotation or 0
+    gradient.Parent = frame
+    
+    -- Animated gradient rotation
+    local gradientTween = TweenService:Create(gradient, TweenInfo.new(6, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1), {
+        Rotation = (rotation or 0) + 360
+    })
+    gradientTween:Play()
+    
+    return gradient
+end
+
+local function addGlowStroke(frame, color, thickness)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color or Color3.fromRGB(255, 255, 255)
+    stroke.Thickness = thickness or 2
+    stroke.Transparency = 0.3
+    stroke.Parent = frame
+    
+    -- Pulsing glow effect
+    local glowTween = TweenService:Create(stroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        Transparency = 0.7
+    })
+    glowTween:Play()
+    
+    return stroke
+end
+
+-- Main Frame with luxury design
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 340, 0, 200)
+Frame.Position = UDim2.new(0.5, -170, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(5, 5, 8)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+addLuxuryCorner(Frame, 25)
+
+-- Luxury outer gradient (Fire-themed colors)
+local frameGradient = addLuxuryGradient(Frame, ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 50)),   -- Orange
+    ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 80, 80)),  -- Red
+    ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255, 200, 50)), -- Yellow
+    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(255, 50, 120)), -- Pink
+    ColorSequenceKeypoint.new(0.8, Color3.fromRGB(200, 80, 255)), -- Purple
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 120, 50))    -- Orange
+}, 0)
+frameGradient.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 0.2),
+    NumberSequenceKeypoint.new(0.5, 0.1),
+    NumberSequenceKeypoint.new(1, 0.2)
+}
+
+-- Inner frame for content
+local InnerFrame = Instance.new("Frame")
+InnerFrame.Size = UDim2.new(1, -4, 1, -4)
+InnerFrame.Position = UDim2.new(0, 2, 0, 2)
+InnerFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 15)
+InnerFrame.BorderSizePixel = 0
+InnerFrame.Parent = Frame
+addLuxuryCorner(InnerFrame, 23)
+
+local innerGradient = addLuxuryGradient(InnerFrame, ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 25, 40)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(40, 20, 30)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 30, 45))
+}, 45)
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Text = "zYn • anti lava"
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Position = UDim2.new(0, 0, 0, 5)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 20
+Title.Font = Enum.Font.GothamBold
+Title.TextStrokeTransparency = 0.5
+Title.TextStrokeColor3 = Color3.fromRGB(255, 150, 100)
+Title.Parent = InnerFrame
+
+-- Function to create luxury buttons
+local function createLuxuryButton(text, size, position, parent)
+    local btn = Instance.new("TextButton")
+    btn.Size = size
+    btn.Position = position
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(20, 25, 35)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.TextStrokeTransparency = 0.7
+    btn.TextStrokeColor3 = Color3.fromRGB(255, 200, 150)
+    btn.Parent = parent or InnerFrame
+    addLuxuryCorner(btn, 12)
+    
+    local gradient = addLuxuryGradient(btn, ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 100)),
+        ColorSequenceKeypoint.new(0.25, Color3.fromRGB(255, 100, 140)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 255, 100)),
+        ColorSequenceKeypoint.new(0.75, Color3.fromRGB(100, 140, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 140, 100))
+    }, 0)
+    gradient.Transparency = NumberSequence.new{
+        NumberSequenceKeypoint.new(0, 0.4),
+        NumberSequenceKeypoint.new(0.5, 0.2),
+        NumberSequenceKeypoint.new(1, 0.4)
+    }
+    
+    addGlowStroke(btn, Color3.fromRGB(255, 150, 100), 1)
+    
+    -- Hover effects
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.3), {
+            Size = size + UDim2.new(0, 4, 0, 2),
+            BackgroundColor3 = Color3.fromRGB(40, 45, 60)
+        }):Play()
+        TweenService:Create(gradient, TweenInfo.new(0.3), {
+            Transparency = NumberSequence.new{
+                NumberSequenceKeypoint.new(0, 0.1),
+                NumberSequenceKeypoint.new(0.5, 0),
+                NumberSequenceKeypoint.new(1, 0.1)
+            }
+        }):Play()
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.3), {
+            Size = size,
+            BackgroundColor3 = Color3.fromRGB(20, 25, 35)
+        }):Play()
+        TweenService:Create(gradient, TweenInfo.new(0.3), {
+            Transparency = NumberSequence.new{
+                NumberSequenceKeypoint.new(0, 0.4),
+                NumberSequenceKeypoint.new(0.5, 0.2),
+                NumberSequenceKeypoint.new(1, 0.4)
+            }
+        }):Play()
+    end)
+    
+    return btn, gradient
+end
+
+-- Anti-Lava Toggle Button
+local ToggleButton, ToggleGradient = createLuxuryButton(
+    "Anti-Lava: OFF", 
+    UDim2.new(0, 200, 0, 45), 
+    UDim2.new(0, 20, 0, 50)
+)
+
+-- Status indicator with fire effect
+local StatusLight = Instance.new("Frame")
+StatusLight.Size = UDim2.new(0, 15, 0, 15)
+StatusLight.Position = UDim2.new(0, 235, 0, 65)
+StatusLight.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+StatusLight.BorderSizePixel = 0
+StatusLight.Parent = InnerFrame
+addLuxuryCorner(StatusLight, 8)
+
+local lightGradient = addLuxuryGradient(StatusLight, ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 50, 50))
+}, 0)
+
+-- Fire glow effect for status light
+addGlowStroke(StatusLight, Color3.fromRGB(255, 80, 80), 2)
+
+-- Protection Counter
+local CounterLabel = Instance.new("TextLabel")
+CounterLabel.Text = "Protections: 0"
+CounterLabel.Size = UDim2.new(0, 160, 0, 25)
+CounterLabel.Position = UDim2.new(0, 20, 0, 105)
+CounterLabel.BackgroundTransparency = 1
+CounterLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+CounterLabel.TextSize = 14
+CounterLabel.Font = Enum.Font.GothamBold
+CounterLabel.TextStrokeTransparency = 0.7
+CounterLabel.TextStrokeColor3 = Color3.fromRGB(255, 150, 100)
+CounterLabel.TextXAlignment = Enum.TextXAlignment.Left
+CounterLabel.Parent = InnerFrame
+
+-- Reset Counter Button
+local ResetButton, ResetGradient = createLuxuryButton(
+    "Reset", 
+    UDim2.new(0, 70, 0, 25), 
+    UDim2.new(0, 185, 0, 105)
+)
+
+-- Settings Button
+local SettingsButton, SettingsGradient = createLuxuryButton(
+    "⚙ Settings", 
+    UDim2.new(0, 90, 0, 30), 
+    UDim2.new(0, 20, 0, 140)
+)
+
+-- Info Button
+local InfoButton, InfoGradient = createLuxuryButton(
+    "ℹ Info", 
+    UDim2.new(0, 70, 0, 30), 
+    UDim2.new(0, 120, 0, 140)
+)
+
+-- Close Button
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 32, 0, 32)
+CloseBtn.Position = UDim2.new(1, -40, 0, 8)
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 18
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.BackgroundColor3 = Color3.fromRGB(40, 25, 35)
+CloseBtn.TextStrokeTransparency = 0.5
+CloseBtn.TextStrokeColor3 = Color3.fromRGB(255, 100, 150)
+CloseBtn.Parent = InnerFrame
+addLuxuryCorner(CloseBtn, 8)
+
+local closeGradient = addLuxuryGradient(CloseBtn, ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 160)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 160, 120)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 120, 160))
+}, 0)
+closeGradient.Transparency = NumberSequence.new(0.3)
+
+-- Circle Button (minimized state)
+local CircleBtn = Instance.new("TextButton")
+CircleBtn.Size = UDim2.new(0, 50, 0, 50)
+CircleBtn.Position = UDim2.new(0.5, -25, 0.8, 0)
+CircleBtn.Text = "🔥"
+CircleBtn.TextSize = 20
+CircleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CircleBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+CircleBtn.Visible = false
+CircleBtn.Active = true
+CircleBtn.Draggable = true
+CircleBtn.Font = Enum.Font.GothamBold
+CircleBtn.Parent = ScreenGui
+addLuxuryCorner(CircleBtn, 25)
+
+-- Circle glow effect with fire colors
+local CircleGlow = Instance.new("Frame")
+CircleGlow.Size = UDim2.new(1, 8, 1, 8)
+CircleGlow.Position = UDim2.new(0, -4, 0, -4)
+CircleGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+CircleGlow.BackgroundTransparency = 0.7
+CircleGlow.ZIndex = -1
+CircleGlow.Parent = CircleBtn
+addLuxuryCorner(CircleGlow, 29)
+
+local circleGlowGradient = addLuxuryGradient(CircleGlow, ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 50)),
+    ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 80, 80)),
+    ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255, 200, 50)),
+    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(255, 50, 120)),
+    ColorSequenceKeypoint.new(0.8, Color3.fromRGB(200, 80, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 120, 50))
+}, 0)
+
+-- Pulsing animation for circle
+local circlePulse = TweenService:Create(CircleGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+    Size = UDim2.new(1, 12, 1, 12),
+    Position = UDim2.new(0, -6, 0, -6),
+    BackgroundTransparency = 0.9
+})
+
+local circleGradient = addLuxuryGradient(CircleBtn, ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 100, 50)),
+    ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 80, 80)),
+    ColorSequenceKeypoint.new(0.66, Color3.fromRGB(255, 200, 50)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 100, 50))
+}, 0)
+circleGradient.Transparency = NumberSequence.new(0.4)
+
+-- Functions
+local function updateStatus(isActive)
+    if isActive then
+        StatusLight.BackgroundColor3 = Color3.fromRGB(80, 255, 80)
+        lightGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 255, 100)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 200, 50))
+        }
+        -- Update stroke color
+        for _, child in pairs(StatusLight:GetChildren()) do
+            if child:IsA("UIStroke") then
+                child.Color = Color3.fromRGB(80, 255, 80)
+            end
+        end
+        
+        ToggleGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 255, 120)),
+            ColorSequenceKeypoint.new(0.25, Color3.fromRGB(120, 255, 80)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 255, 120)),
+            ColorSequenceKeypoint.new(0.75, Color3.fromRGB(120, 255, 80)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 255, 120))
+        }
+    else
+        StatusLight.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+        lightGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 50, 50))
+        }
+        -- Update stroke color
+        for _, child in pairs(StatusLight:GetChildren()) do
+            if child:IsA("UIStroke") then
+                child.Color = Color3.fromRGB(255, 80, 80)
+            end
+        end
+        
+        ToggleGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 100)),
+            ColorSequenceKeypoint.new(0.25, Color3.fromRGB(255, 100, 140)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 255, 100)),
+            ColorSequenceKeypoint.new(0.75, Color3.fromRGB(100, 140, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 140, 100))
+        }
+    end
+end
+
+local function showProtectionEffect()
+    protectionCount = protectionCount + 1
+    CounterLabel.Text = "Protections: " .. protectionCount
+    
+    -- Flash effect
+    TweenService:Create(StatusLight, TweenInfo.new(0.2), {
+        Size = UDim2.new(0, 20, 0, 20)
+    }):Play()
+    
+    TweenService:Create(CounterLabel, TweenInfo.new(0.2), {
+        TextColor3 = Color3.fromRGB(100, 255, 100)
+    }):Play()
+    
+    wait(0.2)
+    
+    TweenService:Create(StatusLight, TweenInfo.new(0.3), {
+        Size = UDim2.new(0, 15, 0, 15)
+    }):Play()
+    
+    TweenService:Create(CounterLabel, TweenInfo.new(0.3), {
+        TextColor3 = Color3.fromRGB(255, 255, 255)
+    }):Play()
+end
+
+-- Anti-Lava logic (enhanced)
+local function preventLavaDeath(part)
+    if antiLavaActive and Character and HumanoidRootPart and part then
+        -- Teleport up and away from lava
+        local safePosition = HumanoidRootPart.CFrame + Vector3.new(0, 8, 0)
+        HumanoidRootPart.CFrame = safePosition
+        
+        -- Ensure health doesn't drop
+        if Humanoid.Health < Humanoid.MaxHealth then
+            Humanoid.Health = Humanoid.MaxHealth
+        end
+        
+        -- Show protection effect
+        showProtectionEffect()
+    end
+end
+
+local function connectLavaParts(parent)
+    for _, part in pairs(parent:GetDescendants()) do
+        if part:IsA("BasePart") and (
+            part.Name:lower():find("lava") or 
+            part.Name:lower():find("fire") or 
+            part.Name:lower():find("magma") or 
+            part.Name:lower():find("acid") or
+            part.Material == Enum.Material.Neon and part.BrickColor == BrickColor.new("Really red")
+        ) then
+            part.Touched:Connect(function(hit)
+                if hit:IsDescendantOf(Character) then
+                    preventLavaDeath(part)
+                end
+            end)
+        end
+    end
+end
+
+-- Button Events
+ToggleButton.MouseButton1Click:Connect(function()
+    antiLavaActive = not antiLavaActive
+    ToggleButton.Text = antiLavaActive and "Anti-Lava: ON" or "Anti-Lava: OFF"
+    updateStatus(antiLavaActive)
+    
+    -- Button press animation
+    TweenService:Create(ToggleButton, TweenInfo.new(0.1), {
+        Size = ToggleButton.Size - UDim2.new(0, 3, 0, 3)
+    }):Play()
+    
+    wait(0.1)
+    
+    TweenService:Create(ToggleButton, TweenInfo.new(0.1), {
+        Size = UDim2.new(0, 200, 0, 45)
+    }):Play()
+end)
+
+ResetButton.MouseButton1Click:Connect(function()
+    protectionCount = 0
+    CounterLabel.Text = "Protections: 0"
+    
+    -- Visual feedback
+    TweenService:Create(ResetGradient, TweenInfo.new(0.3), {
+        Transparency = NumberSequence.new(0)
+    }):Play()
+    
+    wait(0.5)
+    
+    TweenService:Create(ResetGradient, TweenInfo.new(0.5), {
+        Transparency = NumberSequence.new{
+            NumberSequenceKeypoint.new(0, 0.4),
+            NumberSequenceKeypoint.new(0.5, 0.2),
+            NumberSequenceKeypoint.new(1, 0.4)
+        }
+    }):Play()
+end)
+
+SettingsButton.MouseButton1Click:Connect(function()
+    SettingsButton.Text = "Soon™"
+    wait(1)
+    SettingsButton.Text = "⚙ Settings"
+end)
+
+InfoButton.MouseButton1Click:Connect(function()
+    InfoButton.Text = "zYn Script"
+    wait(1)
+    InfoButton.Text = "ℹ Info"
+end)
+
+-- Close/Minimize functionality
+CloseBtn.MouseButton1Click:Connect(function()
+    local closeTween = TweenService:Create(Frame, tweenInfo, {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0)
+    })
+    closeTween:Play()
+    
+    closeTween.Completed:Connect(function()
+        Frame.Visible = false
+        CircleBtn.Visible = true
+        Frame.Size = UDim2.new(0, 340, 0, 200)
+        Frame.Position = UDim2.new(0.5, -170, 0.5, -100)
+        
+        CircleBtn.Size = UDim2.new(0, 0, 0, 0)
+        CircleGlow.Size = UDim2.new(1, 0, 1, 0)
+        
+        circlePulse:Play()
+        
+        TweenService:Create(CircleBtn, tweenInfo, {
+            Size = UDim2.new(0, 50, 0, 50)
+        }):Play()
+    end)
+end)
+
+CircleBtn.MouseButton1Click:Connect(function()
+    -- Fire-themed color cycle for circle
+    local colorSets = {
+        {Color3.fromRGB(255, 120, 50), Color3.fromRGB(255, 80, 80), Color3.fromRGB(255, 200, 50)},
+        {Color3.fromRGB(255, 100, 100), Color3.fromRGB(255, 150, 50), Color3.fromRGB(200, 80, 255)},
+        {Color3.fromRGB(255, 50, 120), Color3.fromRGB(255, 200, 100), Color3.fromRGB(120, 255, 200)}
+    }
+    
+    local randomColors = colorSets[math.random(1, #colorSets)]
+    
+    circleGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, randomColors[1]),
+        ColorSequenceKeypoint.new(0.5, randomColors[2]),
+        ColorSequenceKeypoint.new(1, randomColors[3])
+    }
+    
+    circleGlowGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, randomColors[3]),
+        ColorSequenceKeypoint.new(0.5, randomColors[1]),
+        ColorSequenceKeypoint.new(1, randomColors[2])
+    }
+    
+    circlePulse:Cancel()
+    
+    local shrinkTween = TweenService:Create(CircleBtn, tweenInfo, {
+        Size = UDim2.new(0, 0, 0, 0)
+    })
+    shrinkTween:Play()
+    
+    shrinkTween.Completed:Connect(function()
+        CircleBtn.Visible = false
+        Frame.Visible = true
+        Frame.Size = UDim2.new(0, 0, 0, 0)
+        Frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+        
+        TweenService:Create(Frame, tweenInfo, {
+            Size = UDim2.new(0, 340, 0, 200),
+            Position = UDim2.new(0.5, -170, 0.5, -100)
+        }):Play()
+    end)
+end)
+
+-- Close button hover effects
+CloseBtn.MouseEnter:Connect(function()
+    TweenService:Create(CloseBtn, TweenInfo.new(0.2), {
+        Size = UDim2.new(0, 36, 0, 36),
+        BackgroundColor3 = Color3.fromRGB(60, 35, 50)
+    }):Play()
+end)
+
+CloseBtn.MouseLeave:Connect(function()
+    TweenService:Create(CloseBtn, TweenInfo.new(0.2), {
+        Size = UDim2.new(0, 32, 0, 32),
+        BackgroundColor3 = Color3.fromRGB(40, 25, 35)
+    }):Play()
+end)
+
+-- Initialize connections
+connectLavaParts(Workspace)
+Workspace.DescendantAdded:Connect(connectLavaParts)
+
+-- Initialize character variables and status
+if Character then
+    -- Connect existing character
+end
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    initCharacter(char)
+end)
+
+-- Initialize status
+updateStatus(false)
